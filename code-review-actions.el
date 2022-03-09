@@ -325,44 +325,38 @@ Optionally set a FEEDBACK message."
 ;;;; * Merge PR
 ;;;
 
+(defun code-review--perform-merge (strategy)
+  "Merge PR with specified `strategy`."
+  (if (not (and (stringp strategy)
+                (member strategy '("merge" "rebase" "squash"))))
+      (message "Invalid merge strategy: '%s'" strategy)
+    (let ((pr (code-review-db-get-pullreq)))
+      (if (code-review-github-repo-p pr)
+          (progn
+            (code-review-merge pr strategy)
+            (oset pr state "MERGED")
+            (code-review-db-update pr)
+            (code-review--build-buffer))
+        (code-review-gitlab-not-supported-message)))))
+
+
 ;;;###autoload
 (defun code-review-merge-merge ()
   "Merge PR with MERGE strategy."
   (interactive)
-  (let ((pr (code-review-db-get-pullreq)))
-    (if (code-review-github-repo-p pr)
-        (progn
-          (code-review-merge pr "merge")
-          (oset pr state "MERGED")
-          (code-review-db-update pr)
-          (code-review--build-buffer))
-      (code-review-gitlab-not-supported-message))))
+  (code-review--perform-merge "merge"))
 
 ;;;###autoload
 (defun code-review-merge-rebase ()
   "Merge PR with REBASE strategy."
   (interactive)
-  (let ((pr (code-review-db-get-pullreq)))
-    (if (code-review-github-repo-p pr)
-        (progn
-          (code-review-merge pr "rebase")
-          (oset pr state "MERGED")
-          (code-review-db-update pr)
-          (code-review--build-buffer))
-      (code-review-gitlab-not-supported-message))))
+  (code-review--perform-merge "rebase"))
 
 ;;;###autoload
 (defun code-review-merge-squash ()
   "Merge PR with SQUASH strategy."
   (interactive)
-  (let ((pr (code-review-db-get-pullreq)))
-    (if (code-review-github-repo-p pr)
-        (progn
-          (code-review-merge pr "squash")
-          (oset pr state "MERGED")
-          (code-review-db-update pr)
-          (code-review--build-buffer))
-      (code-review-gitlab-not-supported-message))))
+  (code-review--perform-merge "squash"))
 
 
 ;;;
